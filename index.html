@@ -619,15 +619,16 @@
   </div>
 
   <script>
+    // Exact image filenames specified
     const VOCABULARY_ITEMS = [
       { id: 'bus', text: 'by bus', file: 'by bus.png' },
       { id: 'bike', text: 'by bike', file: 'by bike.png' },
       { id: 'metro', text: 'by metro', file: 'By metro.png' },
-      { id: 'mrt', text: 'by MRT', file: 'By MRT.png' },
-      { id: 'train', text: 'by train', file: 'By train.png' },
-      { id: 'scooter', text: 'by scooter', file: 'By scooter.png' },
-      { id: 'car', text: 'by car', file: 'By car.png' },
-      { id: 'taxi', text: 'by taxi', file: 'By taxi.png' },
+      { id: 'mrt', text: 'by MRT', file: 'by MRT.png' },
+      { id: 'train', text: 'by train', file: 'by train.png' },
+      { id: 'scooter', text: 'by scooter', file: 'by scooter.png' },
+      { id: 'car', text: 'by car', file: 'by car.png' },
+      { id: 'taxi', text: 'by taxi', file: 'by taxi.png' },
       { id: 'foot', text: 'on foot', file: 'on foot.png' }
     ];
 
@@ -846,7 +847,6 @@
             } else {
               const subjDisplay = subj.key === 'you_1' ? 'you' : (subj.key === 'you_2' ? 'you' : subj.eng);
               questionText = `${aux} ${subjDisplay} go to school ${askedVocab.text}?`;
-              // Display badge for "you" since it can mean 你 or 你們
               if (subj.key === 'you_1' || subj.key === 'you_2') {
                 showChineseBadge = true;
               }
