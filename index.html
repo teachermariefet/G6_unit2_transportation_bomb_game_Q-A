@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bomb Game 💣 - Grade 6 Transportation</title>
+  
+  <!-- Balsamiq Sans & Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       1. CORE RESETS & THEMING
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Balsamiq Sans', 'Comic Sans MS', cursive, sans-serif;
+      background-color: #2b1055;
+      color: #333;
+    }
+
+    #app-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #110826;
+    }
+
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* ==========================================================================
+       2. UI COMPONENTS & HUD (DUAL TEAM TRACKER)
+       ========================================================================== */
+    .hud-bar {
+      width: 100%;
+      max-width: 1250px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.94);
+      padding: 0.6rem 1.2rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      border: 4px solid #ffcc00;
+      z-index: 10;
+    }
+
+    .game-title-hud {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #5d2b90;
+      text-shadow: 2px 2px 0px #ffcc00;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .teams-container {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .team-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffffff;
+      padding: 0.3rem 0.8rem;
+      border-radius: 18px;
+      border: 3px solid #ccc;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .team-a { border-color: #ff4757; }
+    .team-b { border-color: #1e90ff; }
+
+    .team-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .team-a .team-name { color: #ff4757; }
+    .team-b .team-name { color: #1e90ff; }
+
+    .team-score {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #2f3542;
+      min-width: 35px;
+      text-align: center;
+    }
+
+    .btn-score-ctrl {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+    }
+
+    .btn-score-ctrl:active {
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+
+    .btn-minus { background: #ff6b6b; }
+    .btn-plus  { background: #1dd1a1; }
+
+    .hud-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      font-family: 'Balsamiq Sans', cursive, sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+    }
+
+    .btn-purple { background: #8e44ad; color: white; }
+    .btn-yellow { background: #f1c40f; color: #2c3e50; }
+    .btn-green  { background: #2ecc71; color: white; font-size: 1.5rem; padding: 0.8rem 1.8rem; }
+    .btn-red    { background: #e74c3c; color: white; font-size: 1.5rem; padding: 0.8rem 1.8rem; }
+    .btn-blue   { background: #3498db; color: white; }
+    .btn-orange { background: #e67e22; color: white; }
+
+    /* ==========================================================================
+       3. HOME SCREEN
+       ========================================================================== */
+    #home-screen {
+      background-image: url('homescreen.png'), linear-gradient(135deg, #2c3e50, #4ca1af);
+      justify-content: center;
+    }
+
+    .home-card {
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 30px;
+      padding: 3rem 4rem;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+      border: 6px solid #ffcc00;
+      max-width: 700px;
+      width: 90%;
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .home-title {
+      font-size: 3.8rem;
+      color: #ff4757;
+      text-shadow: 3px 3px 0 #2ed573, 5px 5px 0 #1e90ff;
+      margin-bottom: 1.5rem;
+    }
+
+    .home-instructions {
+      font-size: 1.6rem;
+      color: #2f3542;
+      margin-bottom: 2.5rem;
+      line-height: 1.5;
+      background: #f1f2f6;
+      padding: 1.2rem;
+      border-radius: 15px;
+      border-left: 6px solid #1e90ff;
+    }
+
+    .btn-start {
+      font-size: 2.2rem;
+      padding: 1rem 3rem;
+      background: linear-gradient(135deg, #2ed573, #26af5f);
+      color: white;
+      border-radius: 50px;
+      border: 4px solid #ffffff;
+      box-shadow: 0 8px 0 #1e824c, 0 15px 20px rgba(0,0,0,0.3);
+    }
+
+    /* ==========================================================================
+       4. GAMEPLAY SCREEN & GRID
+       ========================================================================== */
+    #game-screen {
+      background-image: url('gamescreen.png'), linear-gradient(135deg, #141e30, #243b55);
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 20px;
+      width: 100%;
+      max-width: 1100px;
+      height: 60vh;
+      margin: auto 0;
+    }
+
+    .box-card {
+      background: linear-gradient(145deg, #fffae6, #ffeaa7);
+      border: 5px solid #fdcb6e;
+      border-radius: 20px;
+      font-size: 4rem;
+      font-weight: 700;
+      color: #d63031;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 8px 0 #e1b12c, 0 12px 20px rgba(0,0,0,0.25);
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .box-card:hover:not(.used) {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 13px 0 #e1b12c, 0 16px 25px rgba(0,0,0,0.3);
+      background: linear-gradient(145deg, #ffffff, #ffeaa7);
+    }
+
+    .box-card.used {
+      background: #718093;
+      border-color: #2f3640;
+      color: #a4b0be;
+      box-shadow: inset 0 5px 10px rgba(0,0,0,0.3);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    /* ==========================================================================
+       5. QUESTION & EVALUATION STAGE
+       ========================================================================== */
+    .stage-card {
+      background: rgba(255, 255, 255, 0.96);
+      width: 100%;
+      max-width: 1050px;
+      height: 72vh;
+      margin: auto 0;
+      border-radius: 25px;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+      border: 5px solid #70a1ff;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .question-box {
+      font-size: 2.2rem;
+      font-weight: 700;
+      text-align: center;
+      background: #eccc68;
+      color: #2f3542;
+      padding: 0.8rem 2rem;
+      border-radius: 18px;
+      width: 100%;
+      box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15);
+    }
+
+    .chinese-subject-badge {
+      display: inline-block;
+      font-size: 2rem;
+      font-weight: 700;
+      background: #ff6b81;
+      color: #ffffff;
+      padding: 0.2rem 1.8rem;
+      border-radius: 12px;
+      margin-top: 0.4rem;
+      box-shadow: 0 4px 0 #ed4c67;
+      letter-spacing: 2px;
+    }
+
+    .media-and-answer-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      width: 100%;
+      flex: 1;
+      margin: 0.8rem 0;
+    }
+
+    .transport-img-container {
+      width: 240px;
+      height: 200px;
+      background: #f1f2f6;
+      border: 4px dashed #70a1ff;
+      border-radius: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+    }
+
+    .transport-img-container img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .answer-display-box {
+      flex: 1;
+      background: #f8efba;
+      border: 4px solid #f6b93b;
+      border-radius: 20px;
+      padding: 1.2rem;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .answer-text {
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: #b71540;
+      visibility: hidden;
+      line-height: 1.3;
+    }
+
+    .answer-text.visible {
+      visibility: visible;
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .eval-controls {
+      display: flex;
+      gap: 25px;
+      margin-top: 0.5rem;
+    }
+
+    /* ==========================================================================
+       6. MYSTERY BOX & BONUS STAGE
+       ========================================================================== */
+    .mystery-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .mystery-box-btn {
+      width: 160px;
+      height: 160px;
+      background: linear-gradient(135deg, #ff9ff3, #f368e0);
+      border: 5px solid #ffffff;
+      border-radius: 25px;
+      font-size: 5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 10px 0 #c8d6e5, 0 15px 25px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+
+    .mystery-box-btn:hover:not(.opened) {
+      transform: scale(1.08) rotate(3deg);
+    }
+
+    .mystery-reveal {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #2e86de;
+      text-align: center;
+      min-height: 60px;
+    }
+
+    /* ==========================================================================
+       7. END OF GAME & MODALS
+       ========================================================================== */
+    #end-screen {
+      background-image: url('homescreen.png'), linear-gradient(135deg, #11998e, #38ef7d);
+      justify-content: center;
+    }
+
+    .end-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 30px;
+      padding: 3rem;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      border: 6px solid #ff9f43;
+      max-width: 650px;
+      width: 90%;
+    }
+
+    .end-title {
+      font-size: 3.5rem;
+      color: #ee5253;
+      margin-bottom: 1rem;
+    }
+
+    .final-score-text {
+      font-size: 2.2rem;
+      color: #2f3542;
+      margin: 1.5rem 0;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal-card {
+      background: white;
+      padding: 2rem 3rem;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      max-width: 450px;
+    }
+
+    .modal-card h3 {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      color: #2d3436;
+    }
+
+    .modal-btns {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-container">
+
+    <!-- HOME SCREEN -->
+    <div id="home-screen" class="screen active">
+      <div class="home-card">
+        <h1 class="home-title">Bomb Game 💣</h1>
+        <p class="home-instructions">Look at the picture, answer the question, and open a mystery box!</p>
+        <button id="start-game-btn" class="btn btn-start">🚀 Start Game</button>
+      </div>
+    </div>
+
+    <!-- GAMEPLAY SCREEN -->
+    <div id="game-screen" class="screen">
+      <div class="hud-bar">
+        <div class="game-title-hud">Bomb Game 💣</div>
+        <div class="teams-container">
+          <div class="team-badge team-a">
+            <span class="team-name">Team A:</span>
+            <button class="btn-score-ctrl btn-minus" onclick="adjustScore('A', -1)">-</button>
+            <span id="score-a" class="team-score">0</span>
+            <button class="btn-score-ctrl btn-plus" onclick="adjustScore('A', 1)">+</button>
+          </div>
+          <div class="team-badge team-b">
+            <span class="team-name">Team B:</span>
+            <button class="btn-score-ctrl btn-minus" onclick="adjustScore('B', -1)">-</button>
+            <span id="score-b" class="team-score">0</span>
+            <button class="btn-score-ctrl btn-plus" onclick="adjustScore('B', 1)">+</button>
+          </div>
+        </div>
+        <div class="hud-controls">
+          <button id="mute-btn" class="btn btn-purple">🔊 Music</button>
+          <button id="reset-btn" class="btn btn-orange">🔄 Reset</button>
+          <button id="fullscreen-btn" class="btn btn-blue">⛶ Maximize</button>
+        </div>
+      </div>
+      <div id="boxes-grid" class="grid-container"></div>
+    </div>
+
+    <!-- QUESTION & EVALUATION SCREEN -->
+    <div id="question-screen" class="screen">
+      <div class="hud-bar">
+        <div class="game-title-hud">Bomb Game 💣</div>
+        <div class="teams-container">
+          <div class="team-badge team-a">
+            <span class="team-name">Team A:</span>
+            <button class="btn-score-ctrl btn-minus" onclick="adjustScore('A', -1)">-</button>
+            <span id="score-a-q" class="team-score">0</span>
+            <button class="btn-score-ctrl btn-plus" onclick="adjustScore('A', 1)">+</button>
+          </div>
+          <div class="team-badge team-b">
+            <span class="team-name">Team B:</span>
+            <button class="btn-score-ctrl btn-minus" onclick="adjustScore('B', -1)">-</button>
+            <span id="score-b-q" class="team-score">0</span>
+            <button class="btn-score-ctrl btn-plus" onclick="adjustScore('B', 1)">+</button>
+          </div>
+        </div>
+        <div class="hud-controls">
+          <button id="mute-btn-q" class="btn btn-purple">🔊 Music</button>
+          <button id="fullscreen-btn-q" class="btn btn-blue">⛶ Maximize</button>
+        </div>
+      </div>
+
+      <div class="stage-card">
+        <div style="width: 100%; text-align: center;">
+          <div id="question-text" class="question-box">How do you go to school?</div>
+          <div id="chinese-subject-container">
+            <div id="chinese-subject-text" class="chinese-subject-badge">你</div>
+          </div>
+        </div>
+
+        <div class="media-and-answer-area">
+          <div class="transport-img-container">
+            <img id="question-image" src="" alt="Transportation Image" />
+          </div>
+          <div class="answer-display-box">
+            <div id="answer-text" class="answer-text">I go to school by bus.</div>
+          </div>
+        </div>
+
+        <div id="eval-section" class="eval-controls">
+          <button id="btn-correct" class="btn btn-green">✓ Correct</button>
+          <button id="btn-incorrect" class="btn btn-red">✗ Incorrect</button>
+        </div>
+
+        <div id="mystery-section" class="mystery-stage" style="display: none;">
+          <div id="mystery-box-btn" class="mystery-box-btn">🎁</div>
+          <div id="mystery-reveal-text" class="mystery-reveal"></div>
+          <button id="btn-next-question" class="btn btn-blue" style="display: none; font-size: 1.5rem; padding: 0.8rem 2rem;">Next Question ➔</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- END SCREEN -->
+    <div id="end-screen" class="screen">
+      <div class="end-card">
+        <h1 class="end-title">🎉 Round Completed! 🎉</h1>
+        <div class="final-score-text">
+          <span style="color: #ff4757;">Team A: <span id="final-score-a">0</span></span>
+          <span style="color: #1e90ff;">Team B: <span id="final-score-b">0</span></span>
+        </div>
+        <div style="display: flex; gap: 20px; justify-content: center; margin-top: 2rem;">
+          <button id="play-again-btn" class="btn btn-green">🔄 Play Again</button>
+          <button id="home-btn" class="btn btn-blue">🏠 Home</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESET MODAL -->
+    <div id="reset-modal" class="modal-overlay">
+      <div class="modal-card">
+        <h3>Are you sure you want to reset the current game?</h3>
+        <div class="modal-btns">
+          <button id="confirm-reset" class="btn btn-red">Yes, Reset</button>
+          <button id="cancel-reset" class="btn btn-blue">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const VOCABULARY_ITEMS = [
+      { id: 'bus', text: 'by bus', file: 'by bus.png' },
+      { id: 'bike', text: 'by bike', file: 'by bike.png' },
+      { id: 'metro', text: 'by metro', file: 'By metro.png' },
+      { id: 'mrt', text: 'by MRT', file: 'By MRT.png' },
+      { id: 'train', text: 'by train', file: 'By train.png' },
+      { id: 'scooter', text: 'by scooter', file: 'By scooter.png' },
+      { id: 'car', text: 'by car', file: 'By car.png' },
+      { id: 'taxi', text: 'by taxi', file: 'By taxi.png' },
+      { id: 'foot', text: 'on foot', file: 'on foot.png' }
+    ];
+
+    const SUBJECT_MAPPINGS = [
+      { key: 'you_1', eng: 'you (1)', zh: '你', plural: false, name: false, subjectWord: 'I', verbGo: 'go', auxDo: 'do', auxDont: "don't" },
+      { key: 'you_2', eng: 'you (2+)', zh: '你們', plural: true, name: false, subjectWord: 'We', verbGo: 'go', auxDo: 'do', auxDont: "don't" },
+      { key: 'he', eng: 'he', zh: '他', plural: false, name: false, subjectWord: 'He', verbGo: 'goes', auxDo: 'does', auxDont: "doesn't" },
+      { key: 'she', eng: 'she', zh: '她', plural: false, name: false, subjectWord: 'She', verbGo: 'goes', auxDo: 'does', auxDont: "doesn't" },
+      { key: 'they', eng: 'they', zh: '他們', plural: true, name: false, subjectWord: 'They', verbGo: 'go', auxDo: 'do', auxDont: "don't" },
+      { key: 'name_single_leo', eng: 'Leo', zh: '', plural: false, name: true, subjectWord: 'He', verbGo: 'goes', auxDo: 'does', auxDont: "doesn't" },
+      { key: 'name_single_amy', eng: 'Amy', zh: '', plural: false, name: true, subjectWord: 'She', verbGo: 'goes', auxDo: 'does', auxDont: "doesn't" },
+      { key: 'name_plural', eng: 'Leo and Amy', zh: '', plural: true, name: true, subjectWord: 'They', verbGo: 'go', auxDo: 'do', auxDont: "don't" }
+    ];
+
+    let gameState = {
+      scoreA: 0,
+      scoreB: 0,
+      currentBoxIndex: null,
+      boxes: [],
+      completedCount: 0,
+      isMuted: false,
+      audioCtx: null,
+      bgmGain: null,
+      sfxGain: null,
+      bgmInterval: null,
+      isPlayingBgm: false,
+      evalEvaluated: false,
+      lastAnswerWasCorrect: false,
+      mysteryOpened: false
+    };
+
+    function initAudio() {
+      if (gameState.audioCtx) return;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      gameState.audioCtx = new AudioCtx();
+      gameState.bgmGain = gameState.audioCtx.createGain();
+      gameState.bgmGain.gain.value = gameState.isMuted ? 0 : 0.10;
+      gameState.bgmGain.connect(gameState.audioCtx.destination);
+
+      gameState.sfxGain = gameState.audioCtx.createGain();
+      gameState.sfxGain.gain.value = gameState.isMuted ? 0 : 0.35;
+      gameState.sfxGain.connect(gameState.audioCtx.destination);
+    }
+
+    function ensureAudioContext() {
+      if (gameState.audioCtx && gameState.audioCtx.state === 'suspended') {
+        gameState.audioCtx.resume();
+      }
+    }
+
+    function toggleMute() {
+      gameState.isMuted = !gameState.isMuted;
+      const label = gameState.isMuted ? '🔇 Muted' : '🔊 Music';
+      document.getElementById('mute-btn').innerText = label;
+      document.getElementById('mute-btn-q').innerText = label;
+
+      if (gameState.bgmGain) gameState.bgmGain.gain.value = gameState.isMuted ? 0 : 0.10;
+      if (gameState.sfxGain) gameState.sfxGain.gain.value = gameState.isMuted ? 0 : 0.35;
+    }
+
+    function startBgm() {
+      if (gameState.isPlayingBgm || !gameState.audioCtx) return;
+      gameState.isPlayingBgm = true;
+
+      const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63];
+      let noteIdx = 0;
+
+      gameState.bgmInterval = setInterval(() => {
+        if (gameState.isMuted || !gameState.audioCtx) return;
+        try {
+          const osc = gameState.audioCtx.createOscillator();
+          const noteGain = gameState.audioCtx.createGain();
+          
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(notes[noteIdx], gameState.audioCtx.currentTime);
+          noteGain.gain.setValueAtTime(0.08, gameState.audioCtx.currentTime);
+          noteGain.gain.exponentialRampToValueAtTime(0.001, gameState.audioCtx.currentTime + 0.4);
+
+          osc.connect(noteGain);
+          noteGain.connect(gameState.bgmGain);
+
+          osc.start();
+          osc.stop(gameState.audioCtx.currentTime + 0.45);
+          noteIdx = (noteIdx + 1) % notes.length;
+        } catch (e) { console.error(e); }
+      }, 500);
+    }
+
+    function playSfx(type) {
+      if (!gameState.audioCtx || gameState.isMuted) return;
+      ensureAudioContext();
+
+      const ctx = gameState.audioCtx;
+      const now = ctx.currentTime;
+
+      if (type === 'click') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+        osc.connect(gain);
+        gain.connect(gameState.sfxGain);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } else if (type === 'correct') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.1);
+        osc.frequency.setValueAtTime(783.99, now + 0.2);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+        osc.connect(gain);
+        gain.connect(gameState.sfxGain);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } else if (type === 'incorrect') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+        osc.connect(gain);
+        gain.connect(gameState.sfxGain);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (type === 'bomb') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.5);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+        osc.connect(gain);
+        gain.connect(gameState.sfxGain);
+        osc.start(now);
+        osc.stop(now + 0.5);
+      } else if (type === 'reward') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, now);
+        osc.frequency.setValueAtTime(880, now + 0.12);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+        osc.connect(gain);
+        gain.connect(gameState.sfxGain);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'victory') {
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((f, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.setValueAtTime(f, now + i * 0.12);
+          gain.gain.setValueAtTime(0.3, now + i * 0.12);
+          gain.gain.linearRampToValueAtTime(0.01, now + i * 0.12 + 0.2);
+          osc.connect(gain);
+          gain.connect(gameState.sfxGain);
+          osc.start(now + i * 0.12);
+          osc.stop(now + i * 0.12 + 0.2);
+        });
+      }
+    }
+
+    function shuffleArray(arr) {
+      const array = [...arr];
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function generateRoundAssignments() {
+      const duplicateItem = VOCABULARY_ITEMS[Math.floor(Math.random() * VOCABULARY_ITEMS.length)];
+      let vocabList = shuffleArray([...VOCABULARY_ITEMS, duplicateItem]);
+
+      let rewards = shuffleArray(['💣', '💣', '💣', '+1', '+1', '+1', '+1', '+2', '+2', '+2']);
+
+      const boxes = [];
+      for (let i = 0; i < 10; i++) {
+        const vocab = vocabList[i];
+        const qType = Math.random() < 0.5 ? 'yesno' : 'how';
+        const subj = SUBJECT_MAPPINGS[Math.floor(Math.random() * SUBJECT_MAPPINGS.length)];
+        
+        let questionText = "";
+        let expectedAnswer = "";
+        let showChineseBadge = false;
+
+        if (qType === 'yesno') {
+          const isYes = Math.random() < 0.5;
+          let askedVocab = vocab;
+
+          if (!isYes) {
+            const otherVocabs = VOCABULARY_ITEMS.filter(v => v.id !== vocab.id);
+            askedVocab = otherVocabs[Math.floor(Math.random() * otherVocabs.length)];
+          }
+
+          if (subj.name) {
+            const aux = subj.plural ? 'Do' : 'Does';
+            questionText = `${aux} ${subj.eng} go to school ${askedVocab.text}?`;
+          } else {
+            const useBlank = Math.random() < 0.5;
+            const aux = subj.auxDo.charAt(0).toUpperCase() + subj.auxDo.slice(1);
+            if (useBlank) {
+              questionText = `${aux} _____ go to school ${askedVocab.text}?`;
+              showChineseBadge = true;
+            } else {
+              const subjDisplay = subj.key === 'you_1' ? 'you' : (subj.key === 'you_2' ? 'you' : subj.eng);
+              questionText = `${aux} ${subjDisplay} go to school ${askedVocab.text}?`;
+              // Display badge for "you" since it can mean 你 or 你們
+              if (subj.key === 'you_1' || subj.key === 'you_2') {
+                showChineseBadge = true;
+              }
+            }
+          }
+
+          if (isYes) {
+            expectedAnswer = `Yes, ${subj.subjectWord.toLowerCase() === 'i' ? 'I' : subj.subjectWord.toLowerCase()} ${subj.auxDo}.`;
+          } else {
+            const subjWord = subj.subjectWord === 'I' ? 'I' : subj.subjectWord;
+            expectedAnswer = `No, ${subjWord.toLowerCase() === 'i' ? 'I' : subjWord.toLowerCase()} ${subj.auxDont}. ${subjWord} ${subj.verbGo} to school ${vocab.text}.`;
+          }
+
+        } else {
+          if (subj.name) {
+            const aux = subj.plural ? 'do' : 'does';
+            questionText = `How ${aux} ${subj.eng} go to school?`;
+          } else {
+            const useBlank = Math.random() < 0.5;
+            const aux = subj.plural ? 'do' : (subj.key === 'he' || subj.key === 'she' ? 'does' : 'do');
+            if (useBlank) {
+              questionText = `How ${aux} _____ go to school?`;
+              showChineseBadge = true;
+            } else {
+              const subjDisplay = subj.key === 'you_1' ? 'you' : (subj.key === 'you_2' ? 'you' : subj.eng);
+              questionText = `How ${aux} ${subjDisplay} go to school?`;
+              if (subj.key === 'you_1' || subj.key === 'you_2') {
+                showChineseBadge = true;
+              }
+            }
+          }
+
+          const subjWord = subj.subjectWord === 'I' ? 'I' : subj.subjectWord;
+          expectedAnswer = `${subjWord} ${subj.verbGo} to school ${vocab.text}.`;
+        }
+
+        expectedAnswer = expectedAnswer.replace(/\bi\b/g, 'I');
+
+        boxes.push({
+          id: i + 1,
+          vocab: vocab,
+          subject: subj,
+          questionText: questionText,
+          expectedAnswer: expectedAnswer,
+          reward: rewards[i],
+          showChineseBadge: showChineseBadge,
+          used: false
+        });
+      }
+
+      return boxes;
+    }
+
+    function adjustScore(team, delta) {
+      if (team === 'A') {
+        gameState.scoreA = Math.max(0, gameState.scoreA + delta);
+      } else if (team === 'B') {
+        gameState.scoreB = Math.max(0, gameState.scoreB + delta);
+      }
+      updateScoreDisplays();
+    }
+
+    function updateScoreDisplays() {
+      document.getElementById('score-a').innerText = gameState.scoreA;
+      document.getElementById('score-b').innerText = gameState.scoreB;
+      document.getElementById('score-a-q').innerText = gameState.scoreA;
+      document.getElementById('score-b-q').innerText = gameState.scoreB;
+      document.getElementById('final-score-a').innerText = gameState.scoreA;
+      document.getElementById('final-score-b').innerText = gameState.scoreB;
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('boxes-grid');
+      grid.innerHTML = '';
+
+      gameState.boxes.forEach((box, idx) => {
+        const boxEl = document.createElement('div');
+        boxEl.className = `box-card ${box.used ? 'used' : ''}`;
+        boxEl.innerText = box.id;
+        
+        if (!box.used) {
+          boxEl.addEventListener('click', () => handleBoxClick(idx));
+        }
+
+        grid.appendChild(boxEl);
+      });
+    }
+
+    function initNewRound() {
+      gameState.scoreA = 0;
+      gameState.scoreB = 0;
+      gameState.completedCount = 0;
+      gameState.boxes = generateRoundAssignments();
+      updateScoreDisplays();
+      renderGrid();
+    }
+
+    function handleBoxClick(index) {
+      playSfx('click');
+      gameState.currentBoxIndex = index;
+      const box = gameState.boxes[index];
+
+      box.used = true;
+      gameState.evalEvaluated = false;
+      gameState.mysteryOpened = false;
+
+      document.getElementById('question-text').innerText = box.questionText;
+      document.getElementById('question-image').src = box.vocab.file;
+      document.getElementById('answer-text').innerText = box.expectedAnswer;
+      document.getElementById('answer-text').classList.remove('visible');
+
+      // Chinese Subject Badge Visibility Logic
+      const chineseContainer = document.getElementById('chinese-subject-container');
+      const chineseText = document.getElementById('chinese-subject-text');
+
+      if (!box.showChineseBadge || !box.subject.zh) {
+        chineseContainer.style.display = 'none';
+      } else {
+        chineseContainer.style.display = 'block';
+        chineseText.innerText = box.subject.zh;
+      }
+
+      document.getElementById('eval-section').style.display = 'flex';
+      document.getElementById('btn-correct').disabled = false;
+      document.getElementById('btn-incorrect').disabled = false;
+
+      document.getElementById('mystery-section').style.display = 'none';
+      document.getElementById('mystery-box-btn').classList.remove('opened');
+      document.getElementById('mystery-box-btn').innerText = '🎁';
+      document.getElementById('mystery-reveal-text').innerText = '';
+      document.getElementById('btn-next-question').style.display = 'none';
+
+      showScreen('question-screen');
+    }
+
+    function handleEvaluation(isCorrect) {
+      if (gameState.evalEvaluated) return;
+      gameState.evalEvaluated = true;
+      gameState.lastAnswerWasCorrect = isCorrect;
+
+      document.getElementById('btn-correct').disabled = true;
+      document.getElementById('btn-incorrect').disabled = true;
+      document.getElementById('answer-text').classList.add('visible');
+
+      if (isCorrect) {
+        playSfx('correct');
+      } else {
+        playSfx('incorrect');
+      }
+
+      setTimeout(() => {
+        document.getElementById('eval-section').style.display = 'none';
+        document.getElementById('mystery-section').style.display = 'flex';
+      }, 1200);
+    }
+
+    function handleMysteryClick() {
+      if (gameState.mysteryOpened) return;
+      gameState.mysteryOpened = true;
+
+      const box = gameState.boxes[gameState.currentBoxIndex];
+      const reward = gameState.lastAnswerWasCorrect ? box.reward : '💣';
+      
+      const revealEl = document.getElementById('mystery-reveal-text');
+      const boxBtn = document.getElementById('mystery-box-btn');
+
+      boxBtn.classList.add('opened');
+
+      if (reward === '💣') {
+        playSfx('bomb');
+        boxBtn.innerText = '💣';
+        revealEl.innerText = 'BOMB! No bonus points!';
+        revealEl.style.color = '#e74c3c';
+      } else if (reward === '+1') {
+        playSfx('reward');
+        boxBtn.innerText = '⭐';
+        revealEl.innerText = '+1 Bonus Reward!';
+        revealEl.style.color = '#2ecc71';
+      } else if (reward === '+2') {
+        playSfx('reward');
+        boxBtn.innerText = '🌟';
+        revealEl.innerText = '+2 Bonus Reward!';
+        revealEl.style.color = '#f1c40f';
+      }
+
+      document.getElementById('btn-next-question').style.display = 'inline-block';
+    }
+
+    function handleNextQuestion() {
+      playSfx('click');
+      gameState.completedCount += 1;
+
+      if (gameState.completedCount >= 10) {
+        playSfx('victory');
+        showScreen('end-screen');
+      } else {
+        renderGrid();
+        showScreen('game-screen');
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('start-game-btn').addEventListener('click', () => {
+        initAudio();
+        ensureAudioContext();
+        startBgm();
+        initNewRound();
+        showScreen('game-screen');
+      });
+
+      document.getElementById('mute-btn').addEventListener('click', toggleMute);
+      document.getElementById('mute-btn-q').addEventListener('click', toggleMute);
+
+      document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
+      document.getElementById('fullscreen-btn-q').addEventListener('click', toggleFullscreen);
+
+      document.getElementById('reset-btn').addEventListener('click', () => {
+        document.getElementById('reset-modal').style.display = 'flex';
+      });
+
+      document.getElementById('confirm-reset').addEventListener('click', () => {
+        document.getElementById('reset-modal').style.display = 'none';
+        initNewRound();
+        showScreen('game-screen');
+      });
+
+      document.getElementById('cancel-reset').addEventListener('click', () => {
+        document.getElementById('reset-modal').style.display = 'none';
+      });
+
+      document.getElementById('btn-correct').addEventListener('click', () => handleEvaluation(true));
+      document.getElementById('btn-incorrect').addEventListener('click', () => handleEvaluation(false));
+
+      document.getElementById('mystery-box-btn').addEventListener('click', handleMysteryClick);
+
+      document.getElementById('btn-next-question').addEventListener('click', handleNextQuestion);
+
+      document.getElementById('play-again-btn').addEventListener('click', () => {
+        initNewRound();
+        showScreen('game-screen');
+      });
+
+      document.getElementById('home-btn').addEventListener('click', () => {
+        showScreen('home-screen');
+      });
+    });
+  </script>
+</body>
+</html>
