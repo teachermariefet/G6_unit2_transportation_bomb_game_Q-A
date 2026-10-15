@@ -619,17 +619,16 @@
   </div>
 
   <script>
-    // Exact image filenames specified
-    const VOCABULARY_ITEMS = [
-      { id: 'bus', text: 'by bus', file: 'by bus.png' },
-      { id: 'bike', text: 'by bike', file: 'by bike.png' },
-      { id: 'metro', text: 'by metro', file: 'By metro.png' },
-      { id: 'mrt', text: 'by MRT', file: 'by MRT.png' },
-      { id: 'train', text: 'by train', file: 'by train.png' },
-      { id: 'scooter', text: 'by scooter', file: 'by scooter.png' },
-      { id: 'car', text: 'by car', file: 'by car.png' },
-      { id: 'taxi', text: 'by taxi', file: 'by taxi.png' },
-      { id: 'foot', text: 'on foot', file: 'on foot.png' }
+    // Combined 'by metro' and 'by MRT' into a single vocabulary concept group (randomly picking between their exact filenames when selected)
+    const VOCABULARY_GROUPS = [
+      { id: 'bus', text: 'by bus', files: ['by bus.png'] },
+      { id: 'bike', text: 'by bike', files: ['by bike.png'] },
+      { id: 'mrt_metro', text: 'by metro', files: ['By metro.png', 'by MRT.png'] },
+      { id: 'train', text: 'by train', files: ['by train.png'] },
+      { id: 'scooter', text: 'by scooter', files: ['by scooter.png'] },
+      { id: 'car', text: 'by car', files: ['by car.png'] },
+      { id: 'taxi', text: 'by taxi', files: ['by taxi.png'] },
+      { id: 'foot', text: 'on foot', files: ['on foot.png'] }
     ];
 
     const SUBJECT_MAPPINGS = [
@@ -811,8 +810,20 @@
     }
 
     function generateRoundAssignments() {
-      const duplicateItem = VOCABULARY_ITEMS[Math.floor(Math.random() * VOCABULARY_ITEMS.length)];
-      let vocabList = shuffleArray([...VOCABULARY_ITEMS, duplicateItem]);
+      // Pick 8 unique vocabulary groups + 1 duplicate group to make 10 items
+      let groupList = shuffleArray([...VOCABULARY_GROUPS]);
+      const duplicateGroup = groupList[Math.floor(Math.random() * groupList.length)];
+      let selectedGroups = shuffleArray([...groupList, duplicateGroup]);
+
+      let vocabList = selectedGroups.map(grp => {
+        const chosenFile = grp.files[Math.floor(Math.random() * grp.files.length)];
+        const textLabel = chosenFile.toLowerCase().includes('mrt') ? 'by MRT' : grp.text;
+        return {
+          id: grp.id,
+          text: textLabel,
+          file: chosenFile
+        };
+      });
 
       let rewards = shuffleArray(['💣', '💣', '💣', '+1', '+1', '+1', '+1', '+2', '+2', '+2']);
 
@@ -831,8 +842,10 @@
           let askedVocab = vocab;
 
           if (!isYes) {
-            const otherVocabs = VOCABULARY_ITEMS.filter(v => v.id !== vocab.id);
-            askedVocab = otherVocabs[Math.floor(Math.random() * otherVocabs.length)];
+            const otherVocabs = vocabList.filter(v => v.text !== vocab.text);
+            if (otherVocabs.length > 0) {
+              askedVocab = otherVocabs[Math.floor(Math.random() * otherVocabs.length)];
+            }
           }
 
           if (subj.name) {
@@ -963,7 +976,6 @@
       document.getElementById('answer-text').innerText = box.expectedAnswer;
       document.getElementById('answer-text').classList.remove('visible');
 
-      // Chinese Subject Badge Visibility Logic
       const chineseContainer = document.getElementById('chinese-subject-container');
       const chineseText = document.getElementById('chinese-subject-text');
 
