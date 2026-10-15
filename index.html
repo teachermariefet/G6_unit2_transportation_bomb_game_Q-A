@@ -619,7 +619,8 @@
   </div>
 
   <script>
-    // Combined 'by metro' and 'by MRT' into a single vocabulary concept group (randomly picking between their exact filenames when selected)
+    // Combined 'by metro' and 'by MRT' into a single vocabulary concept group (mrt_metro)
+    // Randomly selecting between their exact filenames when chosen
     const VOCABULARY_GROUPS = [
       { id: 'bus', text: 'by bus', files: ['by bus.png'] },
       { id: 'bike', text: 'by bike', files: ['by bike.png'] },
@@ -810,7 +811,6 @@
     }
 
     function generateRoundAssignments() {
-      // Pick 8 unique vocabulary groups + 1 duplicate group to make 10 items
       let groupList = shuffleArray([...VOCABULARY_GROUPS]);
       const duplicateGroup = groupList[Math.floor(Math.random() * groupList.length)];
       let selectedGroups = shuffleArray([...groupList, duplicateGroup]);
@@ -842,7 +842,8 @@
           let askedVocab = vocab;
 
           if (!isYes) {
-            const otherVocabs = vocabList.filter(v => v.text !== vocab.text);
+            // Filter out items matching the same concept group ID (ensures metro/MRT are treated as same concept)
+            const otherVocabs = vocabList.filter(v => v.id !== vocab.id);
             if (otherVocabs.length > 0) {
               askedVocab = otherVocabs[Math.floor(Math.random() * otherVocabs.length)];
             }
