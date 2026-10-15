@@ -619,8 +619,6 @@
   </div>
 
   <script>
-    // Combined 'by metro' and 'by MRT' into a single vocabulary concept group (mrt_metro)
-    // Randomly selecting between their exact filenames when chosen
     const VOCABULARY_GROUPS = [
       { id: 'bus', text: 'by bus', files: ['by bus.png'] },
       { id: 'bike', text: 'by bike', files: ['by bike.png'] },
@@ -661,23 +659,26 @@
     };
 
     function initAudio() {
-      if (gameState.audioCtx) return;
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
+      try {
+        if (gameState.audioCtx) {
+          if (gameState.audioCtx.state === 'suspended') {
+            gameState.audioCtx.resume();
+          }
+          return;
+        }
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
 
-      gameState.audioCtx = new AudioCtx();
-      gameState.bgmGain = gameState.audioCtx.createGain();
-      gameState.bgmGain.gain.value = gameState.isMuted ? 0 : 0.10;
-      gameState.bgmGain.connect(gameState.audioCtx.destination);
+        gameState.audioCtx = new AudioCtx();
+        gameState.bgmGain = gameState.audioCtx.createGain();
+        gameState.bgmGain.gain.value = gameState.isMuted ? 0 : 0.10;
+        gameState.bgmGain.connect(gameState.audioCtx.destination);
 
-      gameState.sfxGain = gameState.audioCtx.createGain();
-      gameState.sfxGain.gain.value = gameState.isMuted ? 0 : 0.35;
-      gameState.sfxGain.connect(gameState.audioCtx.destination);
-    }
-
-    function ensureAudioContext() {
-      if (gameState.audioCtx && gameState.audioCtx.state === 'suspended') {
-        gameState.audioCtx.resume();
+        gameState.sfxGain = gameState.audioCtx.createGain();
+        gameState.sfxGain.gain.value = gameState.isMuted ? 0 : 0.35;
+        gameState.sfxGain.connect(gameState.audioCtx.destination);
+      } catch (e) {
+        console.warn("Web Audio API not fully supported or blocked:", e);
       }
     }
 
@@ -699,7 +700,7 @@
       let noteIdx = 0;
 
       gameState.bgmInterval = setInterval(() => {
-        if (gameState.isMuted || !gameState.audioCtx) return;
+        if (gameState.isMuted || !gameState.audioCtx || gameState.audioCtx.state !== 'running') return;
         try {
           const osc = gameState.audioCtx.createOscillator();
           const noteGain = gameState.audioCtx.createGain();
@@ -715,90 +716,90 @@
           osc.start();
           osc.stop(gameState.audioCtx.currentTime + 0.45);
           noteIdx = (noteIdx + 1) % notes.length;
-        } catch (e) { console.error(e); }
+        } catch (e) { /* Ignore audio scheduling glitches */ }
       }, 500);
     }
 
     function playSfx(type) {
-      if (!gameState.audioCtx || gameState.isMuted) return;
-      ensureAudioContext();
+      if (!gameState.audioCtx || gameState.isMuted || gameState.audioCtx.state !== 'running') return;
+      try {
+        const ctx = gameState.audioCtx;
+        const now = ctx.currentTime;
 
-      const ctx = gameState.audioCtx;
-      const now = ctx.currentTime;
-
-      if (type === 'click') {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
-        osc.connect(gain);
-        gain.connect(gameState.sfxGain);
-        osc.start(now);
-        osc.stop(now + 0.08);
-      } else if (type === 'correct') {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.setValueAtTime(523.25, now);
-        osc.frequency.setValueAtTime(659.25, now + 0.1);
-        osc.frequency.setValueAtTime(783.99, now + 0.2);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
-        osc.connect(gain);
-        gain.connect(gameState.sfxGain);
-        osc.start(now);
-        osc.stop(now + 0.35);
-      } else if (type === 'incorrect') {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(180, now);
-        osc.frequency.linearRampToValueAtTime(110, now + 0.25);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
-        osc.connect(gain);
-        gain.connect(gameState.sfxGain);
-        osc.start(now);
-        osc.stop(now + 0.25);
-      } else if (type === 'bomb') {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(120, now);
-        osc.frequency.exponentialRampToValueAtTime(30, now + 0.5);
-        gain.gain.setValueAtTime(0.4, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
-        osc.connect(gain);
-        gain.connect(gameState.sfxGain);
-        osc.start(now);
-        osc.stop(now + 0.5);
-      } else if (type === 'reward') {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, now);
-        osc.frequency.setValueAtTime(880, now + 0.12);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
-        osc.connect(gain);
-        gain.connect(gameState.sfxGain);
-        osc.start(now);
-        osc.stop(now + 0.3);
-      } else if (type === 'victory') {
-        const notes = [523.25, 659.25, 783.99, 1046.50];
-        notes.forEach((f, i) => {
+        if (type === 'click') {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
-          osc.frequency.setValueAtTime(f, now + i * 0.12);
-          gain.gain.setValueAtTime(0.3, now + i * 0.12);
-          gain.gain.linearRampToValueAtTime(0.01, now + i * 0.12 + 0.2);
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
           osc.connect(gain);
           gain.connect(gameState.sfxGain);
-          osc.start(now + i * 0.12);
-          osc.stop(now + i * 0.12 + 0.2);
-        });
-      }
+          osc.start(now);
+          osc.stop(now + 0.08);
+        } else if (type === 'correct') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.1);
+          osc.frequency.setValueAtTime(783.99, now + 0.2);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+          osc.connect(gain);
+          gain.connect(gameState.sfxGain);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        } else if (type === 'incorrect') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+          osc.connect(gain);
+          gain.connect(gameState.sfxGain);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'bomb') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(120, now);
+          osc.frequency.exponentialRampToValueAtTime(30, now + 0.5);
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+          osc.connect(gain);
+          gain.connect(gameState.sfxGain);
+          osc.start(now);
+          osc.stop(now + 0.5);
+        } else if (type === 'reward') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(587.33, now);
+          osc.frequency.setValueAtTime(880, now + 0.12);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+          osc.connect(gain);
+          gain.connect(gameState.sfxGain);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'victory') {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((f, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.setValueAtTime(f, now + i * 0.12);
+            gain.gain.setValueAtTime(0.3, now + i * 0.12);
+            gain.gain.linearRampToValueAtTime(0.01, now + i * 0.12 + 0.2);
+            osc.connect(gain);
+            gain.connect(gameState.sfxGain);
+            osc.start(now + i * 0.12);
+            osc.stop(now + i * 0.12 + 0.2);
+          });
+        }
+      } catch (e) { /* Ignore SFX errors */ }
     }
 
     function shuffleArray(arr) {
@@ -842,7 +843,6 @@
           let askedVocab = vocab;
 
           if (!isYes) {
-            // Filter out items matching the same concept group ID (ensures metro/MRT are treated as same concept)
             const otherVocabs = vocabList.filter(v => v.id !== vocab.id);
             if (otherVocabs.length > 0) {
               askedVocab = otherVocabs[Math.floor(Math.random() * otherVocabs.length)];
@@ -934,7 +934,10 @@
 
     function showScreen(screenId) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById(screenId).classList.add('active');
+      const target = document.getElementById(screenId);
+      if (target) {
+        target.classList.add('active');
+      }
     }
 
     function renderGrid() {
@@ -1078,14 +1081,17 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('start-game-btn').addEventListener('click', () => {
-        initAudio();
-        ensureAudioContext();
-        startBgm();
-        initNewRound();
-        showScreen('game-screen');
-      });
+    // Attach listeners once DOM is ready
+    window.addEventListener('DOMContentLoaded', () => {
+      const startBtn = document.getElementById('start-game-btn');
+      if (startBtn) {
+        startBtn.addEventListener('click', () => {
+          initAudio();
+          startBgm();
+          initNewRound();
+          showScreen('game-screen');
+        });
+      }
 
       document.getElementById('mute-btn').addEventListener('click', toggleMute);
       document.getElementById('mute-btn-q').addEventListener('click', toggleMute);
